@@ -46,8 +46,9 @@ The rates of early term and preterm birth are much higher in African American wo
 # Widgets {data-icon="fa-solid fa-chart-simple"}
 
 ##  {.no-title .no-padding data-width="650" data-height="auto"}
+
 ::: {style="background-color: #cce4f0; padding: 20px; border-radius: 10px;"}
-### <span style="font-size: 22px; font-weight: bold;">**How does maternal age vary based on whether they experienced full term, early term, or preterm birth? How do these distributions vary by maternal BMI category?**</span> {.no-padding}
+### [**How does maternal age vary based on whether they experienced full term, early term, or preterm birth? How do these distributions vary by maternal BMI category?**]{style="font-size: 22px; font-weight: bold;"} {.no-padding}
 
 ```{r widget1}
 # cobver bmi to factor
@@ -94,22 +95,26 @@ p <- p %>%
 p
 ```
 :::
+
 ::: {style="background-color: #cce4f0; padding: 20px; border-radius: 10px;"}
 ### Interactivity Notes {.no-padding}
 
 *Please click on the legend categories to hide/show the specific category. The chart is set up to show only the normal BMI category initially.* *Hovering over the circle within each boxplot will display the mean age and birth outcome for that plot.*
 :::
+
 ::: {style="background-color: #cce4f0; padding: 20px; border-radius: 10px;"}
 ### Key Findings {.no-padding}
 
 -   The overall age distribution was similar across birth outcome categories, although the distributions for women experiencing early term or full term birth were slightly right skewed.
-- While the mean age in the early and full term birth categories was higest for underweight women, overweight women were oldest (on average) in the preterm birth group.
+-   While the mean age in the early and full term birth categories was higest for underweight women, overweight women were oldest (on average) in the preterm birth group.
 -   The mean and median age within each birth outcome was generally higher for obese women.
 :::
+
 ##  {.no-title .no-padding data-width="650" data-height="auto"}
 
 ::: {style="background-color: #f7dcdf; padding: 20px; border-radius: 10px;"}
-### <span style="font-size: 22px; font-weight: bold;">How does the percentage of full term, early term, and preterm birth vary based on maternal educational level?</span> {.no-padding}
+### [How does the percentage of full term, early term, and preterm birth vary based on maternal educational level?]{style="font-size: 22px; font-weight: bold;"} {.no-padding}
+
 ```{r, widget2}
 # convert education to factor
 demo_sim$educ <- factor(demo_sim$educ, 
@@ -178,6 +183,7 @@ highchart() %>%
 
 ##  {.no-title .no-padding data-width="650" data-height="auto"}
 
-### Github Repository Link
+### Please use the hyperlinks below:
 
-www.hereitis.com
+-   [GitHub Repository](https://github.com/desai072/data555-pretermbirth)
+-   [GitHub Pages](https://desai072.github.io/data555-pretermbirth/)
