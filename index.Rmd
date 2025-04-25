@@ -1,0 +1,183 @@
+---
+title: "DATA 555: Final Dashboard"
+author: "Siddhi Desai"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: united
+    orientation: columns
+    vertical_layout: scroll
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(highcharter)
+library(tidyr)
+library(readr)
+
+# working directory 
+setwd("/Users/siddhidesai/Desktop/DATA 555")
+
+# Load in data
+demo_sim <- read_csv("simulated_data.csv")
+```
+
+# Introduction {data-icon="fa-solid fa-circle-info"}
+
+##  {.no-title .no-padding data-width="650" data-height="auto"}
+
+### Data Source
+
+The data used in this dashboard has been simulated from the Atlanta African American Maternal Child cohort (2014-2019); the original dataset was not used for confidentiality purposes. Data was simulated using mean and standard deviation for age, and relative proportions for birth outcome, BMI category, and educational attainment. The original cohort included pregnant African American women who were recruited from Grady Hospital and Emory University Hospital Midtown during their first clinical visit from 2014-2019. The simulated data used a sample size of N = 600 participants.
+
+### Aim and Research Questions
+
+The main aim of this exploratory data analysis is to understand any trends in maternal characteristics by birth outcome.
+
+1.  How does maternal age vary based on whether they experienced full term, early term, or preterm birth? How do these distributions vary by maternal BMI category?
+2.  How does the percentage of full term, early term, and preterm birth vary based on maternal educational level?
+
+### Importance and Real-World Impact
+
+The rates of early term and preterm birth are much higher in African American women than women of any other race or ethnicity. It is important to elucidate factors that may impact preterm and early term birth in this sensitive population to improve birth outcomes more effectively.
+
+# Widgets {data-icon="fa-solid fa-chart-simple"}
+
+##  {.no-title .no-padding data-width="650" data-height="auto"}
+::: {style="background-color: #cce4f0; padding: 20px; border-radius: 10px;"}
+### <span style="font-size: 22px; font-weight: bold;">**How does maternal age vary based on whether they experienced full term, early term, or preterm birth? How do these distributions vary by maternal BMI category?**</span> {.no-padding}
+
+```{r widget1}
+# cobver bmi to factor
+demo_sim$bmi_cat <- factor(demo_sim$bmi_cat, 
+                                       levels = c("Underweight", "Healthy Weight", "Overweight", "Obese"))
+
+# convert birthoutcomes to factor
+demo_sim$birthoutcome <- factor(demo_sim$birthoutcome, 
+                                    levels = c("Preterm", 
+                                               "Early Term",
+                                               "Full Term"))
+
+# making and storing the actual plot
+q <- ggplot(demo_sim, aes(x = birthoutcome, y = age, fill = bmi_cat, 
+                          group = interaction(birthoutcome, bmi_cat))) +
+  
+  geom_boxplot(outlier.shape = NA, alpha = 0.7, position = position_dodge(width = 0.8)) + 
+  
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "black") +  
+  
+  labs(x = "Birth Outcome", y = "Maternla Age at Enrollment (years)", fill = "BMI Category") +
+  
+  scale_fill_manual(values = c("Underweight" = "lightblue", "Healthy Weight" = "lightgreen", 
+                               "Overweight" = "orange", "Obese" = "red")) + 
+  
+  theme_minimal() +
+  theme(legend.position = "top")
+
+# converting to plotly
+p <- ggplotly(q, tooltip = c("x", "y", "fill"))
+
+# set default to just show healthy weight at first
+for (i in seq_along(p$x$data)) {
+  trace_name <- p$x$data[[i]]$name
+  if (!grepl("Healthy Weight", trace_name)) {
+    p$x$data[[i]]$visible <- "legendonly"
+  }
+}
+
+# tooltip formatting
+p <- p %>% 
+  style(hovertemplate = paste("Birth Outcome: %{x}<br>", "Mean Age: %{y:.1f} years","<extra></extra>"))
+
+p
+```
+:::
+::: {style="background-color: #cce4f0; padding: 20px; border-radius: 10px;"}
+### Interactivity Notes {.no-padding}
+
+*Please click on the legend categories to hide/show the specific category. The chart is set up to show only the normal BMI category initially.* *Hovering over the circle within each boxplot will display the mean age and birth outcome for that plot.*
+:::
+::: {style="background-color: #cce4f0; padding: 20px; border-radius: 10px;"}
+### Key Findings {.no-padding}
+
+-   The overall age distribution was similar across birth outcome categories, although the distributions for women experiencing early term or full term birth were slightly right skewed.
+- While the mean age in the early and full term birth categories was higest for underweight women, overweight women were oldest (on average) in the preterm birth group.
+-   The mean and median age within each birth outcome was generally higher for obese women.
+:::
+##  {.no-title .no-padding data-width="650" data-height="auto"}
+
+::: {style="background-color: #f7dcdf; padding: 20px; border-radius: 10px;"}
+### <span style="font-size: 22px; font-weight: bold;">How does the percentage of full term, early term, and preterm birth vary based on maternal educational level?</span> {.no-padding}
+```{r, widget2}
+# convert education to factor
+demo_sim$educ <- factor(demo_sim$educ, 
+                                    levels = c("Less than high school", 
+                                               "High school",
+                                               "Some college", 
+                                               "College graduate or above"))
+
+# summarizing data by birth outcome and education category
+dat_sum <- demo_sim %>%
+  group_by(birthoutcome, educ) %>%
+  summarise(tot = n(), .groups = 'drop')  
+
+# overall counts per birth outcome
+totals_per_outcome <- dat_sum %>%
+  group_by(birthoutcome) %>%
+  summarise(outcome_total = sum(tot), .groups = 'drop')
+
+# merge data + calculate %
+dat_perc <- dat_sum %>%
+  left_join(totals_per_outcome, by = "birthoutcome") %>%
+  mutate(percentage = 100 * tot / outcome_total)
+
+#colors
+custom_colors <- c("Less than high school" = "red", 
+                   "High school" = "orange", 
+                   "Some college" = "green", 
+                   "College graduate or above" = "blue")
+
+# highcharter plotting
+highchart() %>%
+  hc_chart(backgroundColor = "#ffffff") %>% 
+  hc_add_series(data = dat_perc, 
+                type = "column", 
+                hcaes(x = birthoutcome, y = percentage, group = educ, fill = educ)) %>%
+  hc_xAxis(type = "category", title = list(text = "Birth Outcome")) %>%
+  hc_yAxis(title = list(text = "Percentage (%)")) %>%
+  hc_plotOptions(column = list(
+    grouping = TRUE, 
+    shadow = FALSE, 
+    borderWidth = 0, 
+    pointPadding = 0.2, 
+    groupPadding = 0.1
+  )) %>%
+  hc_tooltip(
+    pointFormat = "<b>{point.educ}</b><br>Count: {point.tot}<br>Percent: {point.y:.1f}%"
+  ) %>%
+  hc_colors(unname(custom_colors))
+```
+:::
+
+::: {style="background-color: #f7dcdf; padding: 20px; border-radius: 10px;"}
+### Interactivity Notes {.no-padding}
+
+*Please click on the legend categories to hide/show the specific category.* *Hovering over a bar will display the percentage and count for that bar.*
+:::
+
+::: {style="background-color: #f7dcdf; padding: 20px; border-radius: 10px;"}
+### Key Findings {.no-padding}
+
+-   The percentage of women with a high school education in the early term and preterm categories is much higher than percentage of women in any other education categories.
+-   The percentage of women who have some college, and college graduates or above education is higher in the preterm category than in the early term and full term birth categories.
+:::
+
+# GitHub {data-icon="fa-brands fa-github"}
+
+##  {.no-title .no-padding data-width="650" data-height="auto"}
+
+### Github Repository Link
+
+www.hereitis.com
